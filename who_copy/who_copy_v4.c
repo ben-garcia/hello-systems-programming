@@ -13,23 +13,51 @@ void show_time(long);
 void show_info(struct utmp *);
 
 int main(int argc, char *argv[]) {
-  struct utmp ut_buffer;
-  struct utmp *ut_buffer_pointer;
-  int ut_mp_fd;
+  struct utmp ut_buffer; // stores a single utmp record
+  int file_descriptor; // file descriptor for utmp file
+  int ut_size = sizeof(ut_buffer);
+  int ut_line_size = sizeof(ut_buffer.ut_line);
 
-  if ((argc > 1) && (strcmp(argv[1], "twmp")) == 0) {
-    utmpname(_PATH_WTMP);
-  } else {
-    utmpname(_PATH_UTMP);
+  if (argc < 3) { // check usage
+    fprintf(stderr, "usage: %s <utmp-file> <line>\n", argv[0]);
+    exit(1);
   }
 
-  setutent();
-
-  while((getutent_r(&ut_buffer, &ut_buffer_pointer)) == 0) {
-    show_info(&ut_buffer);
+  // try to open utmp file
+  if ((file_descriptor = open(argv[1], O_RDWR)) == -1) {
+    fprintf(stderr, "Cannot open %s\n", argv[1]);
+    exit(1);
   }
 
-  endutent();
+  // If the line is longer than a ut_line permits do not
+  // continue
+  if (strlen(argv[2]) >= UT_LINESIZE) {
+    fprintf(stderr, "Improper argument:%s\n", argv[1]);
+    exit(1);
+  }
+
+  while (read(file_descriptor, &ut_buffer, ut_size) == ut_size) {
+    if ((strncmp(ut_buffer.ut_line, argv[2], ut_line_size) == 0)
+        && (ut_buffer.ut_user[0] == '\0')) {
+      ut_buffer.ut_type = DEAD_PROCESS;
+      ut_buffer.ut_user[0] = '\0';
+      ut_buffer.ut_host[0] = '\0';
+
+      if (gettimeofday((struct timeval *)&ut_buffer.ut_tv, NULL) == 0) {
+        if (lseek(file_descriptor, -ut_size, SEEK_CUR) != -1) {
+          if (write(file_descriptor, &ut_buffer, ut_size) != ut_size) {
+           exit(1);
+          }
+        }
+      } else {
+        fprintf(stderr, "Error getting time of day\n");
+        exit(1);
+      }
+
+      break;
+    }
+  }
+  close(file_descriptor);
 
   return 0;
 }

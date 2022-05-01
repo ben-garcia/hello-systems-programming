@@ -16,7 +16,10 @@
 // For getopt() we need to use this feature test macro
 #if (_POSIX_C_SOURCE >= 2 || _XOPEN_SOURCE)
 
-static int display_info(const char *fpath, const struct stat *sb, int tflag, struct FTW *ftwbuf) {
+static int display_info(const char *fpath,
+                        const struct stat *sb,
+                        int tflag,
+                        struct FTW *ftwbuf) {
   char blanks[PATH_MAX];
   const char *filename = fpath + ftwbuf->base;
   int width = 4 * ftwbuf->level;

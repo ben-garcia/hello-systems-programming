@@ -1,5 +1,5 @@
 // Chapter 3 File Systems and the File Hierarchy
-// traversing the file system(tree) with nftw() on page 63
+// traversing the file system(tree) with nftw() on page 68
 //
 // NOTES:
 // Tree Traversals

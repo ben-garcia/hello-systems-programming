@@ -20,8 +20,8 @@
 #define FALSE 0
 #define TRUE 1
 #define ESCAPE '\033'
-#define CONTORL_C '\003'
-#define CONTORL_D '\004'
+#define CONTROL_C '\003'
+#define CONTROL_D '\004'
 #define CONTROL_H '\010'
 #define KEY_UP 65
 #define KEY_DOWN 66
@@ -180,6 +180,7 @@ int main(int argc, char *argv[]) {
   init_cursor(&curs);
   init_window(STDIN_FILENO, &win);
 
+  // send formated string to PARK.
   sprintf(PARK, "\033[%d;1H", win.rows);
   IPARK = strlen(PARK);
 
@@ -222,13 +223,13 @@ int main(int argc, char *argv[]) {
               }
               move_to(curs.r, curs.c);
               break;
-            case '\003':
+            case CONTROL_C:
               write_status_message(CTRLC, curs);
               break;
-            case '\004':
+            case CONTROL_D:
               write_status_message(CTRLD, curs);
               break;
-            case '\010':
+            case CONTROL_H:
               write_status_message(CTRLH, curs);
               break;
             case 'j':
@@ -248,9 +249,10 @@ int main(int argc, char *argv[]) {
               handle_escape_char(&buf, &win, &curs);
               break;
             default:
-              if ((c = win.erase_char)) {
+              // check for backspace
+              if (c == win.erase_char) {
                 move_left(&buf, &win, &curs);
-            }
+              }
           }
         }
     }
@@ -275,15 +277,16 @@ int parse_lastline(char *str, int len, Buffer buf, char *statusstr) {
 
   state = 1;
 
-  //3. while ((len > 1) && !done) {
   while ((i < len) && !done) {
     switch (state) {
       case 1:
         if (str[i] == ' ') {
           state = 1;
-        } else if (str[i] == 'w') {
+        } else if (str[i] == 'w') { // user wishes to save file 
+          foundwrite = 1;
           state = 2;
         } else if (str[i] == 'q') {
+          foundquit = 1;
           state = 7;
         } else {
           state = 5;
@@ -312,7 +315,7 @@ int parse_lastline(char *str, int len, Buffer buf, char *statusstr) {
       case 4:
         if (str[i] == ' ') {
           state = 4; 
-        } else if (isalnum(str[i]) || str[i] == ' ') {
+        } else if (isalnum(str[i]) || str[i] == '_') {
           filename = &(str[i]);
           state = 6;
         } else {
@@ -323,7 +326,7 @@ int parse_lastline(char *str, int len, Buffer buf, char *statusstr) {
       case 5:
         badchar = 1;
         sprintf(statusstr, "\033[7m: %s Not an editor command\033[27m", str);
-        break;
+        return -1;
       case 6:
         filename = &(str[i - 1]);
         while ((i < len) && (isalnum(str[i])) || str[i] == '_') {
@@ -363,7 +366,7 @@ int parse_lastline(char *str, int len, Buffer buf, char *statusstr) {
 /******************************************************************************/
 
 int do_lastline_mode(Buffer buf, Window win, Cursor curs) {
-  char tempstr[MAXCHARS];
+  char tempstr[MAXCHARS]; // store user command
   char statusstr[MAXCHARS];
   char c;
   int i = 0;
@@ -372,9 +375,8 @@ int do_lastline_mode(Buffer buf, Window win, Cursor curs) {
 
   while (in_lastline_mode) {
     read(STDIN_FILENO, &c, 1);
-    //4. if ((c = '\n')) {
     if (c == '\n') {
-      tempstr[i] = '\0';
+      tempstr[i] = '\0'; // indicate the end of the string
       status = parse_lastline(tempstr, strlen(tempstr), buf, statusstr);
       in_lastline_mode = 0;
       write_status_message(statusstr, curs);
@@ -387,8 +389,8 @@ int do_lastline_mode(Buffer buf, Window win, Cursor curs) {
           in_lastline_mode = 0;
         }
     } else {
-        tempstr[i++] = c;
-        write(1, &c, 1);
+        tempstr[i++] = c; // add char to the user string
+        write(1, &c, 1); // echo it to the screen at the bottom
     }
   }
   return status;

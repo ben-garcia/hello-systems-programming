@@ -11,7 +11,7 @@
 #include <unistd.h>
 #include <math.h>
 #include <getopt.h>
-#ifndef TIOCCGWINSZ
+#ifndef TIOCGWINSZ
 #include <sys/ioctl.h>
 #endif
 
@@ -510,6 +510,7 @@ void save_restore_tty(int fd, int action) {
 void init_window(int fd, Window *win) {
   struct winsize size;
 
+  // check for TIOCGWINSZ 
   if (ioctl(fd, TIOCGWINSZ, &size) < 0) { // get window fields
     perror("TIOCGWINSZ error");
     return;

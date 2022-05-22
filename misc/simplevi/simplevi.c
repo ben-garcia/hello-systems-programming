@@ -1,16 +1,15 @@
 // Chapter 5 Interactive Programs and Signals
 
-#include <stdio.h>
 #include <ctype.h>
-#include <stdlib.h>
-#include <termios.h>
 #include <fcntl.h>
-#include <time.h>
-#include <time.h>
-#include <string.h>
-#include <unistd.h>
-#include <math.h>
 #include <getopt.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <termios.h>
+#include <time.h>
+#include <unistd.h>
 #ifndef TIOCGWINSZ
 #include <sys/ioctl.h>
 #endif
@@ -49,8 +48,8 @@ const char LEFT[] = "\033[1D";
 const int ILEFT = 4;
 const char BACKSPACE[] = "\033[1D \033[1D";
 const int IBACKSPACE = 9;
-char PARK[20]; // string to park cursor at lower left
-int IPARK; // length of PARK string
+char PARK[20];  // string to park cursor at lower left
+int IPARK;      // length of PARK string
 
 // Miscellaneous strings for output
 const char CTRLC[] = "You typed Control-C.";
@@ -60,14 +59,14 @@ const char BLANK = ' ';
 const char INSERT[] = "---INSERT---";
 const int IINSERT = 10;
 const char MAXLINES_MSSGE[] =
-  "You reached the maximum number of lines."
-  " Exiting input mode.";
-const char OUT_OF_MEM_MSSGE[] = 
-  "You reached the maximum buffer size."
-  " Exiting input mode.";
+    "You reached the maximum number of lines."
+    " Exiting input mode.";
+const char OUT_OF_MEM_MSSGE[] =
+    "You reached the maximum buffer size."
+    " Exiting input mode.";
 const char UNHANDLEDCHAR_MSSGE[] =
-  "This input not yet implemented."
-  " Exiting input mode.";
+    "This input not yet implemented."
+    " Exiting input mode.";
 
 /**
  * Clear the screen and put cursor in upper left corner.
@@ -97,19 +96,19 @@ typedef struct _window {
   char erase_char;
 } Window;
 
-
 typedef struct _buffer {
   char text[BUFSIZ];
-  int line_len[MAXLINES]; // lengths of text lines, including newline characters
-  int line_start[MAXLINES]; // starts of each line
+  int line_len[MAXLINES];    // lengths of text lines, including newline
+                             // characters
+  int line_start[MAXLINES];  // starts of each line
   // number of text lines in buffer. This includes lines that have not yet been
   // terminated with a newline character. It is the number of newline
   // characters + 1 if the last character in the buffer is not a newline.
   int num_lines;
-  int index; // index of cursor in text buffer
-  int size; // total chars in buffer
-  int cur_line; // current text line, not screen line
-  int index_in_cur_line; // index in current line of cursor
+  int index;              // index of cursor in text buffer
+  int size;               // total chars in buffer
+  int cur_line;           // current text line, not screen line
+  int index_in_cur_line;  // index in current line of cursor
 } Buffer;
 
 /******************************************************************************/
@@ -117,55 +116,52 @@ typedef struct _buffer {
 /******************************************************************************/
 
 // Window/Terminal Functions
-void init_window(int fd, Window *win);
+void init_window(int fd, Window* win);
 void move_to(int line, int column);
-void write_status_message(const char *message, Cursor curs);
+void write_status_message(const char* message, Cursor curs);
 void save_restore_tty(int fd, int action);
 void modify_termios(int fd, int echo, int canon);
-void set_erase_char(int termfd, Window *win);
+void set_erase_char(int termfd, Window* win);
 
 // Buffer Functions
-int insert(Buffer *buf, Window win, char ch);
-void init_buffer(Buffer *buffer);
-void update_buffer_index(Buffer *buffer);
+int insert(Buffer* buf, Window win, char ch);
+void init_buffer(Buffer* buffer);
+void update_buffer_index(Buffer* buffer);
 int buffer_index(int index_in_line, int cur_line, int linelength[]);
-void redraw_buffer(Buffer buffer, Window *win, Cursor *curs);
+void redraw_buffer(Buffer buffer, Window* win, Cursor* curs);
 void scroll_buffer(Buffer buf, Window win);
 int line_in_buffer(Buffer buf, Window win, int pos);
-void save_buffer(const char path[], Buffer buf, char *statusstr);
-int handle_insertion(Buffer *buf, Window *win, Cursor *curs, char c);
-void get_lastline_in_win(Buffer buffer, Window win, int *lastline);
+void save_buffer(const char path[], Buffer buf, char* statusstr);
+int handle_insertion(Buffer* buf, Window* win, Cursor* curs, char c);
+void get_lastline_in_win(Buffer buffer, Window win, int* lastline);
 
 // Lastline Mode
-int parse_lastline(char *str, int len, Buffer buf, char *statusstr);
+int parse_lastline(char* str, int len, Buffer buf, char* statusstr);
 int do_lastline_mode(Buffer buf, Window win, Cursor curs);
 
 // Cursor Functions
-void init_cursor(Cursor *cursor);
-void show_cursor(Buffer buf,
-                 Window win,
-                 Cursor cursor,
-                 int index_in_line,
+void init_cursor(Cursor* cursor);
+void show_cursor(Buffer buf, Window win, Cursor cursor, int index_in_line,
                  int line_number);
-void advance_cursor(Cursor *cursor, Window win, char ch);
-void get_cursor_at(Buffer buf, Window win, int index, int lineno, Cursor *curs);
-void handle_escape_char(Buffer *buf, Window *win, Cursor *curs);
-void move_up(Buffer *buf, Window *win, Cursor *curs);
-void move_down(Buffer *buf, Window *win, Cursor *curs);
-void move_right(Buffer *buf, Window *win, Cursor *curs);
-void move_left(Buffer *buf, Window *win, Cursor *curs);
+void advance_cursor(Cursor* cursor, Window win, char ch);
+void get_cursor_at(Buffer buf, Window win, int index, int lineno, Cursor* curs);
+void handle_escape_char(Buffer* buf, Window* win, Cursor* curs);
+void move_up(Buffer* buf, Window* win, Cursor* curs);
+void move_down(Buffer* buf, Window* win, Cursor* curs);
+void move_right(Buffer* buf, Window* win, Cursor* curs);
+void move_left(Buffer* buf, Window* win, Cursor* curs);
 
 /******************************************************************************/
 /*                                  Main                                      */
 /******************************************************************************/
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   int quit = 0;
   int in_input_mode = 0;
   int in_lastline_mode = 0;
   Buffer buf;
   Window win;
-  Cursor curs; // cursor position (0, 0) in upper left
-  char prompt = ':'; // prompt character
+  Cursor curs;        // cursor position (0, 0) in upper left
+  char prompt = ':';  // prompt character
   char c;
   int status;
 
@@ -194,71 +190,71 @@ int main(int argc, char *argv[]) {
           in_input_mode = 0;
           write_status_message("          ", curs);
         } else {
-            // insert typed char and echo it
-            in_input_mode = handle_insertion(&buf, &win, &curs, c);
-            if (in_input_mode ==  UNHANDLEDCHAR) {
-              in_input_mode = 1;
-            } else {
-                write_status_message(INSERT, curs);
+          // insert typed char and echo it
+          in_input_mode = handle_insertion(&buf, &win, &curs, c);
+          if (in_input_mode == UNHANDLEDCHAR) {
+            in_input_mode = 1;
+          } else {
+            write_status_message(INSERT, curs);
           }
         }
       }
     } else {
-        if (read(STDIN_FILENO, &c, 1) > 0) {
-          switch (c) {
-            case 'i':
-              in_input_mode = 1;
-              park();
-              update_buffer_index(&buf);
-              move_to(curs.r, curs.c);
-              write_status_message(INSERT, curs);
-              break;
-            case ':':
-              in_input_mode = 1;
-              park();
-              write(1, &prompt, 1);
-              status = do_lastline_mode(buf, win, curs);
-              if (status >= 0) {
-                quit = status; 
-              }
-              move_to(curs.r, curs.c);
-              break;
-            case CONTROL_C:
-              write_status_message(CTRLC, curs);
-              break;
-            case CONTROL_D:
-              write_status_message(CTRLD, curs);
-              break;
-            case CONTROL_H:
-              write_status_message(CTRLH, curs);
-              break;
-            case 'j':
-              move_down(&buf, &win, &curs);
-              break;
-            case 'k':
-              move_up(&buf, &win, &curs);
-              break;
-            case 'l':
-            case ' ':
-              move_right(&buf, &win, &curs);
-              break;
-            case 'h':
+      if (read(STDIN_FILENO, &c, 1) > 0) {
+        switch (c) {
+          case 'i':
+            in_input_mode = 1;
+            park();
+            update_buffer_index(&buf);
+            move_to(curs.r, curs.c);
+            write_status_message(INSERT, curs);
+            break;
+          case ':':
+            in_input_mode = 1;
+            park();
+            write(1, &prompt, 1);
+            status = do_lastline_mode(buf, win, curs);
+            if (status >= 0) {
+              quit = status;
+            }
+            move_to(curs.r, curs.c);
+            break;
+          case CONTROL_C:
+            write_status_message(CTRLC, curs);
+            break;
+          case CONTROL_D:
+            write_status_message(CTRLD, curs);
+            break;
+          case CONTROL_H:
+            write_status_message(CTRLH, curs);
+            break;
+          case 'j':
+            move_down(&buf, &win, &curs);
+            break;
+          case 'k':
+            move_up(&buf, &win, &curs);
+            break;
+          case 'l':
+          case ' ':
+            move_right(&buf, &win, &curs);
+            break;
+          case 'h':
+            move_left(&buf, &win, &curs);
+            break;
+          case ESCAPE:
+            handle_escape_char(&buf, &win, &curs);
+            break;
+          default:
+            // check for backspace
+            if (c == win.erase_char) {
               move_left(&buf, &win, &curs);
-              break;
-            case ESCAPE:
-              handle_escape_char(&buf, &win, &curs);
-              break;
-            default:
-              // check for backspace
-              if (c == win.erase_char) {
-                move_left(&buf, &win, &curs);
-              }
-          }
+            }
         }
+      }
     }
   }
   printf("\n");
-  tcflush(STDIN_FILENO, TCIFLUSH); 
+  tcflush(STDIN_FILENO, TCIFLUSH);
   clear_and_home();
   save_restore_tty(STDIN_FILENO, RESTORE);
   return 0;
@@ -266,13 +262,13 @@ int main(int argc, char *argv[]) {
 
 /******************************************************************************/
 
-int parse_lastline(char *str, int len, Buffer buf, char *statusstr) {
-  int i = 0;  
+int parse_lastline(char* str, int len, Buffer buf, char* statusstr) {
+  int i = 0;
   int foundquit = 0;
   int foundwrite = 0;
   int badchar = 0;
   int done = 0;
-  char *filename = NULL;
+  char* filename = NULL;
   int state;
 
   state = 1;
@@ -282,7 +278,7 @@ int parse_lastline(char *str, int len, Buffer buf, char *statusstr) {
       case 1:
         if (str[i] == ' ') {
           state = 1;
-        } else if (str[i] == 'w') { // user wishes to save file 
+        } else if (str[i] == 'w') {  // user wishes to save file
           foundwrite = 1;
           state = 2;
         } else if (str[i] == 'q') {
@@ -298,15 +294,15 @@ int parse_lastline(char *str, int len, Buffer buf, char *statusstr) {
           foundquit = 1;
           state = 3;
         } else if (str[i] == ' ') {
-            state = 4;
+          state = 4;
         } else {
-            state = 5;
+          state = 5;
         }
         i++;
         break;
       case 3:
         if (str[i] == ' ') {
-          state = 4; 
+          state = 4;
         } else {
           state = 5;
         }
@@ -314,7 +310,7 @@ int parse_lastline(char *str, int len, Buffer buf, char *statusstr) {
         break;
       case 4:
         if (str[i] == ' ') {
-          state = 4; 
+          state = 4;
         } else if (isalnum(str[i]) || str[i] == '_') {
           filename = &(str[i]);
           state = 6;
@@ -366,7 +362,7 @@ int parse_lastline(char *str, int len, Buffer buf, char *statusstr) {
 /******************************************************************************/
 
 int do_lastline_mode(Buffer buf, Window win, Cursor curs) {
-  char tempstr[MAXCHARS]; // store user command
+  char tempstr[MAXCHARS];  // store user command
   char statusstr[MAXCHARS];
   char c;
   int i = 0;
@@ -376,27 +372,27 @@ int do_lastline_mode(Buffer buf, Window win, Cursor curs) {
   while (in_lastline_mode) {
     read(STDIN_FILENO, &c, 1);
     if (c == '\n') {
-      tempstr[i] = '\0'; // indicate the end of the string
+      tempstr[i] = '\0';  // indicate the end of the string
       status = parse_lastline(tempstr, strlen(tempstr), buf, statusstr);
       in_lastline_mode = 0;
       write_status_message(statusstr, curs);
       statusstr[0] = '\0';
     } else if (c == win.erase_char) {
-        write(1, BACKSPACE, IBACKSPACE);
-        if (i > 0 ) {
-          i--;
-        } else {
-          in_lastline_mode = 0;
-        }
+      write(1, BACKSPACE, IBACKSPACE);
+      if (i > 0) {
+        i--;
+      } else {
+        in_lastline_mode = 0;
+      }
     } else {
-        tempstr[i++] = c; // add char to the user string
-        write(1, &c, 1); // echo it to the screen at the bottom
+      tempstr[i++] = c;  // add char to the user string
+      write(1, &c, 1);   // echo it to the screen at the bottom
     }
   }
   return status;
 }
 
-void handle_escape_char(Buffer *buf, Window *win, Cursor *curs) {
+void handle_escape_char(Buffer* buf, Window* win, Cursor* curs) {
   char c;
 
   read(STDIN_FILENO, &c, 1);
@@ -413,7 +409,7 @@ void handle_escape_char(Buffer *buf, Window *win, Cursor *curs) {
       case KEY_RIGHT:
         move_right(buf, win, curs);
         break;
-      case KEY_LEFT:  
+      case KEY_LEFT:
         move_left(buf, win, curs);
         break;
     }
@@ -426,7 +422,7 @@ void handle_escape_char(Buffer *buf, Window *win, Cursor *curs) {
  * @param termfd - file descriptor of the terminal
  * @param win - window struct which represents the terminal itself
  */
-void set_erase_char(int termfd, Window *win) {
+void set_erase_char(int termfd, Window* win) {
   struct termios cur_tty;
   tcgetattr(termfd, &cur_tty);
 
@@ -439,7 +435,7 @@ void set_erase_char(int termfd, Window *win) {
  * @param fd - file descriptor
  *           - STDIN_FILENO for stdin
  *           - STDOUT_FILENO for stdout
- * @param echo - flag to indicate whether if echoing should be enabled 
+ * @param echo - flag to indicate whether if echoing should be enabled
  *             - set to 0 when the program is running, then turned on after
  *               program exists.
  * @param canon - flag that indicates whether to use in canonical mode
@@ -450,17 +446,17 @@ void set_erase_char(int termfd, Window *win) {
  */
 void modify_termios(int fd, int echo, int canon) {
   struct termios cur_tty;
-  tcgetattr(fd, &cur_tty); // get copy of the state for the terminal
+  tcgetattr(fd, &cur_tty);  // get copy of the state for the terminal
 
-  if (canon) { // nanonical mode
+  if (canon) {  // nanonical mode
     cur_tty.c_lflag |= ICANON;
-  } else { // non-canonical mode
+  } else {  // non-canonical mode
     cur_tty.c_lflag &= ~ICANON;
   }
 
-  if (echo) { // enable echoing 
+  if (echo) {  // enable echoing
     cur_tty.c_lflag |= ECHO;
-  } else { // disable echoing
+  } else {  // disable echoing
     cur_tty.c_lflag &= (~ECHO & ~ECHOE);
   }
 
@@ -470,7 +466,7 @@ void modify_termios(int fd, int echo, int canon) {
   cur_tty.c_cc[VMIN] = 1;
   cur_tty.c_cc[VTIME] = 0;
 
-  tcsetattr(fd, TCSADRAIN, &cur_tty); // update the terminal attributes
+  tcsetattr(fd, TCSADRAIN, &cur_tty);  // update the terminal attributes
 }
 
 /**
@@ -495,23 +491,21 @@ void save_restore_tty(int fd, int action) {
   }
 }
 
-
 /******************************************************************************/
 /*                              Window Functions                              */
 /******************************************************************************/
 
-
 /**
  * Initialize the window by settings its fields.
  *
- * @param fd - file descriptor 
+ * @param fd - file descriptor
  * @param win - window struct which represents the terminal itself
  */
-void init_window(int fd, Window *win) {
+void init_window(int fd, Window* win) {
   struct winsize size;
 
-  // check for TIOCGWINSZ 
-  if (ioctl(fd, TIOCGWINSZ, &size) < 0) { // get window fields
+  // check for TIOCGWINSZ
+  if (ioctl(fd, TIOCGWINSZ, &size) < 0) {  // get window fields
     perror("TIOCGWINSZ error");
     return;
   }
@@ -528,7 +522,7 @@ void init_window(int fd, Window *win) {
  * @param message - the message to print
  * @param curs - cursor
  */
-void write_status_message(const char *message, Cursor curs) {
+void write_status_message(const char* message, Cursor curs) {
   write(1, PARK, IPARK);
   write(1, CLEAR_LINE, ICLEAR_LINE);
   write(1, message, strlen(message));
@@ -557,7 +551,7 @@ void move_to(int line, int column) {
  *
  * @param buffer - the buffer to initialize
  */
-void init_buffer(Buffer *buffer) {
+void init_buffer(Buffer* buffer) {
   buffer->num_lines = 0;
   buffer->cur_line = 0;
   buffer->line_len[0] = 0;
@@ -567,17 +561,14 @@ void init_buffer(Buffer *buffer) {
   buffer->index = 0;
 }
 
-void save_buffer(const char path[], Buffer buf, char *statusstr) {
+void save_buffer(const char path[], Buffer buf, char* statusstr) {
   char newline = '\n';
   int fd;
   // char statusstr[80];
-  
+
   fd = creat(path, 0644);
   if (fd != -1) {
-    sprintf(statusstr,
-            "\"%s\" %dL %dC written",
-            path,
-            buf.num_lines + 1,
+    sprintf(statusstr, "\"%s\" %dL %dC written", path, buf.num_lines + 1,
             buf.size);
     write(fd, buf.text, strlen(buf.text));
     if (buf.text[buf.size - 1] != '\n') {
@@ -585,11 +576,11 @@ void save_buffer(const char path[], Buffer buf, char *statusstr) {
     }
     close(fd);
   } else {
-      exit(1);
+    exit(1);
   }
 }
 
-void update_buffer_index(Buffer *buffer) {
+void update_buffer_index(Buffer* buffer) {
   int totalchars = 0;
   int i = 0;
 
@@ -604,17 +595,17 @@ void update_buffer_index(Buffer *buffer) {
 /**
  * Get the lastline position of the window
  */
-void get_lastline_in_win(Buffer buffer, Window win, int *lastline) {
+void get_lastline_in_win(Buffer buffer, Window win, int* lastline) {
   int totallines = 0;
   int i;
-  int max_possible = win.rows - 1; // rows minus status line
-  
+  int max_possible = win.rows - 1;  // rows minus status line
+
   i = win.line_at_top;
   while (i < buffer.num_lines) {
     if (buffer.line_len[i] <= win.cols) {
       totallines++;
     } else {
-      totallines += (int) ceil((double)buffer.line_len[i] / win.cols); 
+      totallines += (int)ceil((double)buffer.line_len[i] / win.cols);
     }
 
     if (totallines > max_possible) {
@@ -630,7 +621,7 @@ void get_lastline_in_win(Buffer buffer, Window win, int *lastline) {
 /**
  * Write the updated buffer to the screen
  */
-void redraw_buffer(Buffer buffer, Window *win, Cursor *curs) {
+void redraw_buffer(Buffer buffer, Window* win, Cursor* curs) {
   int i;
   int lastline;
   int lastchar;
@@ -737,32 +728,32 @@ int line_in_buffer(Buffer buf, Window win, int pos) {
 /**
  * Synchronize buffer, window, cursor when in input mode
  *
- * @return - 0 if success 
+ * @return - 0 if success
  *         - -1 if current line has maxed out characters length
  *         - -2 if the buffer has run out of space
  *         - -3 if the erase char is pressed
  */
-int insert(Buffer *buf, Window win, char c) {
+int insert(Buffer* buf, Window win, char c) {
   int i;
 
   if ((c == '\n') && (MAXLINES == buf->num_lines)) {
-    return OUT_OF_LINES; // -1
+    return OUT_OF_LINES;  // -1
   } else if (buf->size == BUFSIZ) {
-    return OUT_OF_MEM; // -2
+    return OUT_OF_MEM;  // -2
   }
 
   if (c == win.erase_char) {
-    return UNHANDLEDCHAR; // -3
+    return UNHANDLEDCHAR;  // -3
   }
 
   for (i = buf->size; i > buf->index; i--) {
     buf->text[i] = buf->text[i - 1];
   }
 
-  buf->text[buf->index] = c; // add new character to the buffer
-  buf->size++; // increment the number of characters in the buffer
-  buf->index++; // advance the position of the cursor
-  buf->line_len[buf->cur_line]++; // increment the number chars in the line
+  buf->text[buf->index] = c;  // add new character to the buffer
+  buf->size++;   // increment the number of characters in the buffer
+  buf->index++;  // advance the position of the cursor
+  buf->line_len[buf->cur_line]++;  // increment the number chars in the line
 
   // the first character sets line count to 1
   if (buf->size == 1) {
@@ -771,7 +762,7 @@ int insert(Buffer *buf, Window win, char c) {
 
   if (c == '\n') {
     // Save the length of the line being split by the newline
-    int temp = buf->line_len[buf->cur_line]; 
+    int temp = buf->line_len[buf->cur_line];
 
     // the new length of current line is the current index position + 1
     buf->line_len[buf->cur_line] = buf->index_in_cur_line + 1;
@@ -788,22 +779,22 @@ int insert(Buffer *buf, Window win, char c) {
     }
     // set the start of the new line created here. It is the sum of the
     // start of cur_line plus the length of cur_line.
-    buf->line_start[buf->cur_line + 1] = buf->line_start[buf->cur_line]
-      + buf->line_len[buf->cur_line];
-    buf->cur_line++; // advance to new line
+    buf->line_start[buf->cur_line + 1] =
+        buf->line_start[buf->cur_line] + buf->line_len[buf->cur_line];
+    buf->cur_line++;  // advance to new line
     // The length of the newly created line is the number
     // of characters that were to the right of the current
     // index position
     buf->line_len[buf->cur_line] = temp - buf->line_len[buf->cur_line - 1];
     buf->index_in_cur_line = 0;
-  } else if (isprint(c)) { // non-newline character
-      buf->index_in_cur_line++; // advance index in line
-      // increment all line starts after this line
-      for (i = buf->cur_line + 1; i < buf->num_lines; i++) {
-        buf->line_start[i]++;
-      }
+  } else if (isprint(c)) {     // non-newline character
+    buf->index_in_cur_line++;  // advance index in line
+    // increment all line starts after this line
+    for (i = buf->cur_line + 1; i < buf->num_lines; i++) {
+      buf->line_start[i]++;
+    }
   } else {
-      return UNHANDLEDCHAR;
+    return UNHANDLEDCHAR;
   }
   return 0;
 }
@@ -812,11 +803,11 @@ int insert(Buffer *buf, Window win, char c) {
  * Wrapper function to handle user input when in input mode
  *
  * @return - 0 error
- *         - 1 success 
+ *         - 1 success
  */
-int handle_insertion(Buffer *buf, Window *win, Cursor *curs, char c) {
+int handle_insertion(Buffer* buf, Window* win, Cursor* curs, char c) {
   int retvalue;
-  
+
   // insert typed char and echo it
   retvalue = insert(buf, *win, c);
   if (retvalue < 0) {
@@ -837,17 +828,11 @@ int handle_insertion(Buffer *buf, Window *win, Cursor *curs, char c) {
   return 1;
 }
 
-
 /******************************************************************************/
 /*                             Cursor Functions                               */
 /******************************************************************************/
-void get_cursor_at(
-  Buffer buf,
-  Window win,
-  int index,
-  int lineno,
-  Cursor *curs) {
-
+void get_cursor_at(Buffer buf, Window win, int index, int lineno,
+                   Cursor* curs) {
   int total_lines_before = 0;
   int rows_in_current_textline = 0;
   int i;
@@ -858,7 +843,7 @@ void get_cursor_at(
     if (buf.line_len[i] < win.cols) {
       total_lines_before++;
     } else {
-      total_lines_before += (int) ceil((double)buf.line_len[i] / win.cols);
+      total_lines_before += (int)ceil((double)buf.line_len[i] / win.cols);
     }
   }
   rows_in_current_textline = index / win.cols;
@@ -867,13 +852,13 @@ void get_cursor_at(
 }
 
 /**
- * Advance the cursor depending on ch 
+ * Advance the cursor depending on ch
  *
  * @param cursor
  * @param win
  * @param ch character pressed
  */
-void advance_cursor(Cursor *cursor, Window win, char ch) {
+void advance_cursor(Cursor* cursor, Window win, char ch) {
   if (ch == '\n') {
     // when 'Enter' is pressed, place cursor in the beggining of
     // the next row
@@ -881,7 +866,7 @@ void advance_cursor(Cursor *cursor, Window win, char ch) {
     cursor->c = 0;
   } else {
     cursor->c++;
-    if (cursor->c == win.cols) { // wrap the line
+    if (cursor->c == win.cols) {  // wrap the line
       cursor->c = 0;
       cursor->r++;
     }
@@ -893,35 +878,26 @@ void advance_cursor(Cursor *cursor, Window win, char ch) {
  *
  * @param cursor - the cursor to initialize
  */
-void init_cursor(Cursor *cursor) {
+void init_cursor(Cursor* cursor) {
   cursor->r = 0;
   cursor->c = 0;
 }
 
-void show_cursor(
-  Buffer buf,
-  Window win,
-  Cursor cursor,
-  int index_in_line,
-  int line_number) {
-
+void show_cursor(Buffer buf, Window win, Cursor cursor, int index_in_line,
+                 int line_number) {
   char curs_str[80];
-  sprintf(
-      curs_str,
-      "Cursor: [%d,%d] line index: %d win topline: %d "
-      "buf #lines: %d",
-      cursor.r + 1,
-      cursor.c + 1,
-      line_number,
-      win.line_at_top,
-      buf.num_lines);
+  sprintf(curs_str,
+          "Cursor: [%d,%d] line index: %d win topline: %d "
+          "buf #lines: %d",
+          cursor.r + 1, cursor.c + 1, line_number, win.line_at_top,
+          buf.num_lines);
   write(1, PARK, IPARK);
   write(1, CLEAR_LINE, ICLEAR_LINE);
   write(1, curs_str, strlen(curs_str));
   move_to(cursor.r, cursor.c);
 }
 
-void move_up(Buffer *buf, Window *win, Cursor *curs) {
+void move_up(Buffer* buf, Window* win, Cursor* curs) {
   // if buf.cur_line == 0, we cannot go up further
   if (buf->cur_line > 0) {
     buf->cur_line--;
@@ -941,7 +917,7 @@ void move_up(Buffer *buf, Window *win, Cursor *curs) {
   }
 }
 
-void move_down(Buffer *buf, Window *win, Cursor *curs) {
+void move_down(Buffer* buf, Window* win, Cursor* curs) {
   int lastline;
 
   if (buf->cur_line < buf->num_lines - 1) {
@@ -961,17 +937,16 @@ void move_down(Buffer *buf, Window *win, Cursor *curs) {
       get_cursor_at(*buf, *win, buf->index_in_cur_line, buf->cur_line, curs);
       scroll_buffer(*buf, *win);
     } else {
-        get_cursor_at(*buf, *win, buf->index_in_cur_line, buf->cur_line, curs);
+      get_cursor_at(*buf, *win, buf->index_in_cur_line, buf->cur_line, curs);
     }
     move_to(curs->r, curs->c);
   }
 }
 
-void move_right(Buffer *buf, Window *win, Cursor *curs) {
-  if ((buf->index_in_cur_line < buf->line_len[buf->cur_line] - 1)
-    || (buf->index_in_cur_line < buf->line_len[buf->cur_line])
-    && (buf->cur_line == buf->num_lines - 1)) {
-
+void move_right(Buffer* buf, Window* win, Cursor* curs) {
+  if ((buf->index_in_cur_line < buf->line_len[buf->cur_line] - 1) ||
+      (buf->index_in_cur_line < buf->line_len[buf->cur_line]) &&
+          (buf->cur_line == buf->num_lines - 1)) {
     buf->index_in_cur_line++;
     if (buf->index_in_cur_line % win->cols == 0) {
       curs->r++;
@@ -982,21 +957,21 @@ void move_right(Buffer *buf, Window *win, Cursor *curs) {
       }
       move_to(curs->r, curs->c);
     } else {
-        curs->c++;
-        write(1, RIGHT, IRIGHT);
+      curs->c++;
+      write(1, RIGHT, IRIGHT);
     }
   }
 }
 
-void move_left(Buffer *buf, Window *win, Cursor *curs) {
+void move_left(Buffer* buf, Window* win, Cursor* curs) {
   if (buf->index_in_cur_line > 0) {
     if (buf->index_in_cur_line % win->cols == 0) {
       curs->r--;
       curs->c = win->cols - 1;
       move_to(curs->r, curs->c);
     } else {
-        curs->c--;
-        write(1, LEFT, ILEFT);
+      curs->c--;
+      write(1, LEFT, ILEFT);
     }
     buf->index_in_cur_line--;
   }
